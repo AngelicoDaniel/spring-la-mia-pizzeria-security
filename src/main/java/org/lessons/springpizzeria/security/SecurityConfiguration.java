@@ -11,18 +11,13 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfiguration {
-    /* per definire un AuthenticationProvider ho bisogno di:
-   - uno UserDetailsService
-   - un PasswordEncoder
-  */
-    // questo è lo UserDetailsService
+    //  UserDetailsService
     @Bean
     DatabaseUserDetailsService userDetailsService() {
         return new DatabaseUserDetailsService();
     }
 
-    // questo è il PasswordEncoder (che deduce l'algoritmo di encoding da una stringa nella password
-    // stessa)
+    //  PasswordEncoder(prende l'algoritmo di encoding da una stringa nella password stessa)
     @Bean
     PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
@@ -30,36 +25,36 @@ public class SecurityConfiguration {
 
     @Bean
     DaoAuthenticationProvider authenticationProvider() {
-        // creo l'authenticationProvider
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        // gli setto il PasswordEncoder
         provider.setPasswordEncoder(passwordEncoder());
-        // gli setto lo UserDetailsService
         provider.setUserDetailsService(userDetailsService());
         return provider;
-
     }
 
-    /*
-* /offer solo ADMIN
-* /pizzas, /pizzas/{id} ADMIN e USER
-* /pizzas/edit/** ADMIN
-* /pizzas/create ADMIN
- /ingredients/** ADMIN
-*/
+  /*
+   * /pizza, /pizza/{id} ADMIN e USER
+   * /discounts solo ADMIN
+   * /pizza/edit/** ADMIN
+   * /pizza/create, /pizza/delete/{id} ADMIN
+    /ingredients/** ADMIN
+   */
+
+
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // definisco la catena di filtri
         http.authorizeHttpRequests()
-                .requestMatchers("/categories").hasAuthority("ADMIN")
-                .requestMatchers("/books/edit/**").hasAuthority("ADMIN")
-                .requestMatchers("/books/create").hasAuthority("ADMIN")
-                .requestMatchers("/books/**").hasAnyAuthority("ADMIN", "USER")
-                .requestMatchers("/borrowings/**").hasAuthority("ADMIN")
+                .requestMatchers("/pizza/create").hasAuthority("ADMIN")
+                .requestMatchers("/pizza/edit/**").hasAuthority("ADMIN")
+                .requestMatchers("/pizza/*").hasAnyAuthority("ADMIN", "USER")
+                .requestMatchers("/ingredients/**").hasAuthority("ADMIN")
+                .requestMatchers("/pizza/delete/*").hasAuthority("ADMIN")
+                .requestMatchers("/discounts/**").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.POST).hasAuthority("ADMIN")
+                .requestMatchers("/pizza").hasAnyAuthority("ADMIN", "USER")
                 .requestMatchers("/**").permitAll()
                 .and().formLogin()
                 .and().logout();
         return http.build();
     }
 }
+
